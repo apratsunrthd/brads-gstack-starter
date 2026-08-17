@@ -30,3 +30,25 @@ Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-desig
 /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
 
 Use ~/.claude/skills/gstack/... for gstack file paths (the global install path).
+
+## Standing commit + PR policy (REQUIRED)
+
+Material changes in this repo always get committed to a non-main branch and
+shipped via a pull request — done automatically, without asking per-instance.
+Never commit directly to `main`, and never leave material changes sitting
+uncommitted. This applies regardless of whether the work went through a
+gstack skill (e.g. `/ship`) or was built directly — that distinction doesn't
+matter. This supersedes the general default of asking before every commit;
+this instruction is the standing authorization for the ordinary
+branch → commit → push → PR path.
+
+Exceptions: destructive or history-rewriting git operations (force-push,
+`reset --hard`, amending pushed commits) still require explicit confirmation.
+"Material" means real changes a user would want reviewed or preserved — not a
+throwaway scratch file, a read-only investigation, or work explicitly framed
+as exploratory/local-only.
+
+A Stop-hook backstop (`.claude/hooks/no-commits-on-main.sh`, registered in
+`.claude/settings.json`) blocks ending a session while this repo is left on
+`main`/`master` with uncommitted or unpushed changes, so the policy holds
+even if a session forgets it in prose.
