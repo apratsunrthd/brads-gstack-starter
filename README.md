@@ -10,10 +10,16 @@ Any repo created from this template ships with:
 
 - **`CLAUDE.md`** — a `## gstack (REQUIRED)` section telling Claude Code to verify
   gstack is installed globally before doing any work, and how to install it if not
-  (pointed at the `apratsunrthd/gstack` fork, not upstream).
+  (pointed at the `apratsunrthd/gstack` fork, not upstream). Also a
+  `## Standing commit + PR policy (REQUIRED)` section: material changes always
+  get committed to a branch and shipped via a PR, automatically, never
+  committed straight to `main`.
 - **`.claude/hooks/check-gstack.sh`** — a `PreToolUse` hook that blocks Skill usage
   until gstack is installed at `~/.claude/skills/gstack`.
-- **`.claude/settings.json`** — registers the hook above.
+- **`.claude/hooks/no-commits-on-main.sh`** — a `Stop` hook that blocks ending a
+  session while the repo is left on `main`/`master` with uncommitted or
+  unpushed changes, backstopping the commit + PR policy above.
+- **`.claude/settings.json`** — registers both hooks above.
 
 This mirrors gstack's own "team mode required" bootstrap
 (`gstack-team-init required`), except it points installers at the

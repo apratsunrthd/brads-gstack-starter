@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/no-commits-on-main.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }
