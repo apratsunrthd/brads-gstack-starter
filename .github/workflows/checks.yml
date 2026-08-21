@@ -1,0 +1,60 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax check hook scripts
+        run: |
+          bash -n .claude/hooks/check-gstack.sh
+          bash -n .claude/hooks/no-commits-on-main.sh
+
+      - name: Shellcheck hook scripts
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: ".claude/hooks"
+
+      - name: Validate settings.json
+        run: |
+          jq -e '.hooks.PreToolUse[0].hooks[0].command' .claude/settings.json > /dev/null
+          jq -e '.hooks.Stop[0].hooks[0].command' .claude/settings.json > /dev/null
+
+      - name: check-gstack.sh emits valid JSON (gstack missing)
+        run: |
+          out=$(HOME=/tmp/fake-home-missing bash .claude/hooks/check-gstack.sh) || true
+          echo "$out" | jq -e . > /dev/null
+          echo "$out" | jq -e '.hookSpecificOutput.permissionDecision == "deny"' > /dev/null
+
+      - name: check-gstack.sh emits valid JSON (gstack installed)
+        run: |
+          mkdir -p /tmp/fake-home-installed/.claude/skills/gstack/bin
+          out=$(HOME=/tmp/fake-home-installed bash .claude/hooks/check-gstack.sh)
+          echo "$out" | jq -e . > /dev/null
+          test "$out" = "{}"
+
+      - name: no-commits-on-main.sh is a no-op outside a github repo on main
+        run: |
+          tmp=$(mktemp -d)
+          out=$(cd "$tmp" && bash "$GITHUB_WORKSPACE/.claude/hooks/no-commits-on-main.sh")
+          test -z "$out"
+
+      - name: no-commits-on-main.sh blocks dirty work on main with valid JSON
+        run: |
+          tmp=$(mktemp -d)
+          cd "$tmp"
+          git init -q -b main
+          git remote add origin https://github.com/foo/bar.git
+          git config user.email test@test.com
+          git config user.name test
+          echo x > f.txt && git add f.txt && git commit -q -m init
+          echo y >> f.txt
+          out=$(bash "$GITHUB_WORKSPACE/.claude/hooks/no-commits-on-main.sh")
+          echo "$out" | jq -e . > /dev/null
+          echo "$out" | jq -e '.continue == false' > /dev/null
